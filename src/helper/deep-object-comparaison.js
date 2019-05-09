@@ -1,5 +1,3 @@
-import fromEntries from './from-entries'
-
 const deepObjectComparaison = (a, b) => {
     const ae = Object.keys (a)
     const be = Object.keys (b)
