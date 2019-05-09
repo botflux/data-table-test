@@ -1,5 +1,4 @@
 const deepObjectComparaison = (a, b) => {
-    const ae = Object.keys (a)
     const be = Object.keys (b)
 
     const d = be.reduce ((prev, key) => {
