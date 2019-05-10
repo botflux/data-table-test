@@ -2,126 +2,175 @@
  * 
  * @param {{}} param0 
  */
-const viewFactory = ({ eventTarget, wrapper }) => {
+const viewFactory = ({ eventTarget, wrapper, config = {} }) => {
 
+    const { 
+        tableRowTemplateAttribute = 'data-table-row-template', 
+        paginationTemplateAttribute = 'data-table-pagination-template',
+        bodyAttribute = 'data-table-body',
+        emptyBodyAttribute = 'data-table-empty-body',
+        paginatorAttribute = 'data-table-paginator',
 
-    const setter = {
-        set (obj, prop, value) {
-            const oldState = JSON.parse (JSON.stringify (state))
-            obj[prop] = value
-            const newState = JSON.parse (JSON.stringify (state))
+        fieldAttribute = 'data-table-field',
+        fieldOrderAttribute = 'data-table-field-order',
+        fieldOrderDirectionAttribute = 'data-table-order-direction',
+        fieldInputAttribute = 'data-table-field-input',
 
-            eventTarget.dispatchEvent (new CustomEvent ('view', {
-                detail: {
-                    oldState,
-                    newState
-                }
-            }))
-
-            return true
-        }
-    }
-
-    const state = new Proxy ({
-        order: new Proxy ({}, setter),
-        input: new Proxy ({}, setter)
-    }, setter)
-
-    const elements = [...wrapper.querySelectorAll ('[data-table-field]')]
-        .map (header => ({ name: header.dataset.tableField, header }))
-        .map (({ header, name }) => {
-            const order = wrapper.querySelector (`[data-table-field-order="${header.dataset.tableField}"]`)
-            let currentOrder = 0
-
-            !!order && order.addEventListener ('click', () => {
-                currentOrder += 1
-
-                if (currentOrder > 1) currentOrder = -1
-                state.order[name] = currentOrder
-            })
-
-            return ({ header, order, name })
-        })
-        .map (fields => {
-            const input = wrapper.querySelector(`[data-table-field-input="${fields.header.dataset.tableField}"]`)
-
-            !!input && input.addEventListener ('input', e => {
-
-                state.input[fields.name] = e.target.value
-            })
-
-            return ({ ...fields, input })
-        })
+        paginationElementAttribute = 'data-table-pagination',
+        activePaginationElementAttribute = 'data-table-pagination-active',
+        rowElementFieldAttribute = 'data-table-field'
+    } = config
 
     /**
      * Template elements
      */
-    const rowTemplate = wrapper.querySelector ('[data-table-row-template]')
-    const paginationTemplate = wrapper.querySelector ('[data-table-pagination-template]')
+    const rowTemplate = wrapper.querySelector (`[${tableRowTemplateAttribute}]`)
+    const paginationTemplate = wrapper.querySelector (`[${paginationTemplateAttribute}]`)
     /**! */
 
     /**
      * Containers
      */
-    const body = wrapper.querySelector ('[data-table-body]')
-    const paginator = wrapper.querySelector ('[data-table-paginator]')
+    const body = wrapper.querySelector (`[${bodyAttribute}]`)
+    const emptyBody = wrapper.querySelector (`[${emptyBodyAttribute}]`)
+    const paginator = wrapper.querySelector (`[${paginatorAttribute}]`)
     /**! */
 
-    const makePaginationTemplate = (n, text) => {
-        const t = paginationTemplate.content.cloneNode (true)
-        let e = t.querySelector ('[data-table-pagination]')
+    // get all headers
+    const elements = [...wrapper.querySelectorAll (`[${fieldAttribute}]`)]
+        // we extract the name of each header
+        .map (header => ({ name: header.getAttribute (fieldAttribute), header }))
+        // we extract order control of each header
+        .map (holder => ({ ...holder, order: wrapper.querySelector (`[${fieldOrderAttribute}="${holder.name}"]`) }))
+        // we extract input of each header
+        .map (holder => ({ ...holder, input: wrapper.querySelector (`[${fieldInputAttribute}="${holder.name}"]`) }))
 
-        // console.log(t,e)
-        e.setAttribute ('data-table-pagination', n)
-        e.innerHTML = text
-        e.addEventListener ('click', () => {
-            state.page = n
+    elements.forEach (({ input, order, name }) => {
+        !!input && input.addEventListener ('input', () => {
+            eventTarget.dispatchEvent (new CustomEvent (`view:input`, {
+                detail: {
+                    name,
+                    value: input.value
+                }
+            }))
         })
-        
-        paginator.appendChild (e)
+
+        !!order && order.addEventListener ('click', () => {
+            eventTarget.dispatchEvent (new CustomEvent (`view:order`, {
+                detail: {
+                    name
+                }
+            }))
+        })
+    })
+
+    const makePaginationElement = (page, text, active) => {
+        const template = paginationTemplate.content.cloneNode (true)
+        const button = template.querySelector (`[${paginationElementAttribute}]`)
+
+        if (!button) return
+
+        if (active)
+            button.setAttribute (activePaginationElementAttribute, '')
+
+        // button.setAttribute ('data-table-pagination', page)
+        button.addEventListener ('click', () => {
+            eventTarget.dispatchEvent (new CustomEvent ('view:page', {
+                detail: page
+            }))
+        })
+
+        button.innerHTML = text
+
+        paginator.appendChild (template)
     }
 
-    const updateRows = data => {
+    const updateOrdersAttribute = orders => {
+        Object.entries (orders)
+            .forEach (([k, v]) => {
+                const el = elements.find (e => e.name === k)
+                console.log(el)
+                if (!el) return
+
+                el.order.setAttribute (fieldOrderDirectionAttribute, v)
+            })
+    }    
+
+    const updatePagination = ({ pageCount, page }) => {
+        paginator.innerHTML = ''
+
+        if (page > 1) {
+            makePaginationElement (0, '<<')
+        }
+
+        if (page > 0) {
+            makePaginationElement (page - 1, '<')
+        }
+
+        ;[...Array(pageCount).keys()]
+            .filter (n => n > page - 3 && n < page + 3)
+            .forEach (n => {
+                let active = n === page
+
+                makePaginationElement (n, n + 1, active)
+            })
+
+
+        if (page < pageCount - 1) {
+            makePaginationElement (page + 1, '>')
+        }
+
+        if (page < pageCount - 2) {
+            makePaginationElement (pageCount - 1, '>>')
+        }
+    }
+
+    const updateData = ({ data }) => {
+        if (data.length === 0) {
+            body.setAttribute (bodyAttribute, 'empty')
+            emptyBody.setAttribute (emptyBodyAttribute, 'empty')
+        } else {
+            body.setAttribute (bodyAttribute, '')
+            emptyBody.setAttribute (emptyBodyAttribute, '')
+        }
+
         body.innerHTML = ''
+        // console.log('a', data)
 
         data.forEach (row => {
-            const t = rowTemplate.content.cloneNode (true)
+            const template = rowTemplate.content.cloneNode (true)
 
             Object.keys (row)
                 .forEach (k => {
-                    const e = t.querySelector (`[data-table-field="${k}"]`)
-                    if (!e) return
-                    e.innerHTML = row[k]
+                    const field = template.querySelector (`[${rowElementFieldAttribute}="${k}"]`)
+
+                    if (!field) return
+
+                    field.innerHTML = row[k]
                 })
-            body.appendChild (t)
+
+            body.appendChild (template)
         })
     }
 
-    const updatePagination = (pageCount, page) => {
-        paginator.innerHTML = ''
-
-        ;[...Array(pageCount).keys ()]
-            .filter(n => n > page - 3 && n < page + 3)
-            .forEach (n => makePaginationTemplate (n, n + 1))
-    }
-
-    eventTarget.addEventListener ('viewmodel', e => {
-        console.log(e.detail.newState)
-        
-        if ('data' in e.detail.delta) {
-            updateRows (e.detail.newState.data)
+    eventTarget.addEventListener ('viewmodel', ({ detail }) => {
+        // when new data were fetched
+        // console.log('detail', detail)
+        if ('pageCount' in detail.delta || 'page' in detail.delta) {
+            // console.log('page count updated')
+            updatePagination (detail.newState)
+        }
+        console.log('viewwwww', detail.newState, detail.delta)
+        if ('data' in detail.delta) {
+            console.log('view', detail.newState.data)
+            // console.log('data updated')
+            updateData (detail.newState)
         }
 
-        if ('pageCount' in e.detail.delta) {
-            updatePagination (e.detail.newState.pageCount, e.detail.newState.currentPage)
-        }
-
-        if ('page' in e.detail.delta) {
-            updatePagination (e.detail.newState.pageCount, e.detail.newState.currentPage)
+        if ('orders' in detail.delta) {
+            updateOrdersAttribute (detail.newState.orders)
         }
     })
-
-    console.log('view', elements, rowTemplate, paginationTemplate, body, paginator)
 }
 
 export default viewFactory
