@@ -12,17 +12,22 @@ import viewFactory from './view-factory'
 const dataTableFactory = (getData, wrapper, { requestAfter = 250 } = {}, errorHandler) => {
     const eventTarget = new EventTarget ()
 
-    if (!errorHandler) errorHandler = new EventTarget ()
+    if (!errorHandler) {
+        errorHandler = new EventTarget ()
+        errorHandler.addEventListener ('error', console.log)
+    }
 
     viewModelFactory ({
         getData,
         eventTarget,
+        errorHandler,
         requestAfter
     })
 
     viewFactory ({
         eventTarget,
-        wrapper
+        wrapper,
+        errorHandler
     })
 }
 

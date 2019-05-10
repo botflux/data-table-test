@@ -2,7 +2,7 @@
  * 
  * @param {{}} param0 
  */
-const viewFactory = ({ eventTarget, wrapper, config = {} }) => {
+const viewFactory = ({ eventTarget, wrapper, errorHandler, config = {} }) => {
 
     const { 
         tableRowTemplateAttribute = 'data-table-row-template', 
@@ -68,7 +68,12 @@ const viewFactory = ({ eventTarget, wrapper, config = {} }) => {
         const template = paginationTemplate.content.cloneNode (true)
         const button = template.querySelector (`[${paginationElementAttribute}]`)
 
-        if (!button) return
+        if (!button) {
+            errorHandler.dispatchEvent (new CustomEvent ('error', {
+                detail: new Error (`view: no element with ${paginationElementAttribute} found in the pagination template !`)
+            }))
+            return
+        }
 
         if (active)
             button.setAttribute (activePaginationElementAttribute, '')
@@ -89,7 +94,7 @@ const viewFactory = ({ eventTarget, wrapper, config = {} }) => {
         Object.entries (orders)
             .forEach (([k, v]) => {
                 const el = elements.find (e => e.name === k)
-                console.log(el)
+
                 if (!el) return
 
                 el.order.setAttribute (fieldOrderDirectionAttribute, v)
@@ -135,7 +140,6 @@ const viewFactory = ({ eventTarget, wrapper, config = {} }) => {
         }
 
         body.innerHTML = ''
-        // console.log('a', data)
 
         data.forEach (row => {
             const template = rowTemplate.content.cloneNode (true)
@@ -160,10 +164,8 @@ const viewFactory = ({ eventTarget, wrapper, config = {} }) => {
             // console.log('page count updated')
             updatePagination (detail.newState)
         }
-        console.log('viewwwww', detail.newState, detail.delta)
+        
         if ('data' in detail.delta) {
-            console.log('view', detail.newState.data)
-            // console.log('data updated')
             updateData (detail.newState)
         }
 

@@ -1,6 +1,6 @@
 import deepObjectComparaison from './helper/deep-object-comparaison'
 
-const viewModelFactory = ({ eventTarget, getData, requestAfter = 750 }) => {
+const viewModelFactory = ({ eventTarget, getData, errorHandler, requestAfter = 750 }) => {
     
     let timeoutId
     
@@ -44,7 +44,7 @@ const viewModelFactory = ({ eventTarget, getData, requestAfter = 750 }) => {
     const p = makeProxy (state, state, 'viewmodel')
 
     eventTarget.addEventListener ('view:input', ({ detail }) => {
-        console.log('input dispatched',p)
+        // console.log('input dispatched',p)
         p.inputs[detail.name] = detail.value
     })
 
@@ -80,7 +80,7 @@ const viewModelFactory = ({ eventTarget, getData, requestAfter = 750 }) => {
             timeoutId = setTimeout (() => {
                 getData (detail.newState)
                     .then (({ data, pageCount }) => {
-                        console.log(data, pageCount)
+                        // console.log(data, pageCount)
                         p.data = data
                         p.pageCount = pageCount
                     })
