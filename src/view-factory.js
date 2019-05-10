@@ -142,18 +142,24 @@ const viewFactory = ({ eventTarget, wrapper, errorHandler, config = {} }) => {
         body.innerHTML = ''
 
         data.forEach (row => {
-            const template = rowTemplate.content.cloneNode (true)
-
+            const template = rowTemplate.cloneNode (true)
+            let templateString = template.innerHTML
             Object.keys (row)
                 .forEach (k => {
-                    const field = template.querySelector (`[${rowElementFieldAttribute}="${k}"]`)
+                    const r = new RegExp (`{{\\s(${k})\\s}}`, 'gm')
+                    templateString = templateString.replace(r, row[k])
+                    // const field = template.querySelector (`[${rowElementFieldAttribute}="${k}"]`)
+                    
+                    // if (!field) return
 
-                    if (!field) return
 
-                    field.innerHTML = row[k]
+
+                    // field.innerHTML = row[k]
                 })
 
-            body.appendChild (template)
+            template.innerHTML = templateString
+
+            body.appendChild (template.content)
         })
     }
 
