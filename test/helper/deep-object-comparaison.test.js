@@ -206,4 +206,20 @@ describe ('#deepObjectComparaison', () => {
             }
         })
     })
+
+    it ('returns the difference when there is objects', () => {
+        const a = {
+            arr: ['hello', 'world']
+        }
+
+        const b = {
+            arr: []
+        }
+
+        const delta = deepObjectComparaison (a, b)
+
+        expect(delta).toStrictEqual ({
+            arr: []
+        })
+    })
 })

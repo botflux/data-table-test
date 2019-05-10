@@ -4,12 +4,12 @@ const deepObjectComparaison = (a, b) => {
     const d = be.reduce ((prev, key) => {
         const aElement = a[key]
         const bElement = b[key]
-        // console.log('null', key, aElement, bElement, !aElement || !bElement)
+        
         if ((!aElement || !bElement) && (aElement !== bElement)) {
             return {...prev, [key]: bElement }
         }
 
-        if (typeof aElement === 'object' && typeof bElement === 'object') {
+        if (typeof aElement === 'object' && typeof bElement === 'object' && !Array.isArray (aElement) && !Array.isArray (bElement)) {
             const diff = deepObjectComparaison(aElement, bElement)
 
             if (Object.keys (diff).length > 0) {
@@ -17,8 +17,10 @@ const deepObjectComparaison = (a, b) => {
             }
             return prev
         }
-
-        // console.log('diff',key, aElement, bElement, aElement !== bElement)
+        
+        if (Array.isArray (aElement) && Array.isArray (bElement)) {
+            return {...prev, [key]: bElement }
+        }
 
         if (aElement !== bElement) {
             return {...prev, [key]: bElement }
