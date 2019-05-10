@@ -135,4 +135,75 @@ describe ('#deepObjectComparaison', () => {
             }
         })
     })
+
+    it ('returns the difference when one of the to object is a proxy', () => {
+        const a = new Proxy ({
+            hello: 'world'
+        }, {
+            set (o, p, v) {
+                o[p] = v
+            }
+        })
+
+        const b = new Proxy ({
+            hello: 'w',
+        }, {
+            set (o, p, v) {
+                o[p] = v
+            }
+        })
+
+        const delta = deepObjectComparaison (a, b)
+
+        expect (delta).toStrictEqual ({
+            hello: 'w'
+        })
+    })
+
+    it ('returns the difference when there is nested proxies', () => {
+        const proxyHandler = {
+            set (o, p, n) {
+                o[p] = n
+                return true
+            }
+        }
+        const p1 = new Proxy({
+            john: 'hello',
+            jane: 'world'
+        }, proxyHandler)
+
+        const p2 = new Proxy ({
+            bla: 'foo',
+            bar: 'bla'
+        }, proxyHandler)
+
+        const a = new Proxy ({
+            p1, p2, input: 'Jane Doe'
+        }, proxyHandler)
+
+        const p3 = new Proxy({
+            john: 20,
+            jane: 'world'
+        }, proxyHandler)
+
+        const p4 = new Proxy ({
+            bla: 'foo',
+            bar: 'bla'
+        }, proxyHandler)
+
+        const b = new Proxy({
+            p1: p3,
+            p2: p4,
+            input: 'Jane Do'
+        }, proxyHandler)
+
+        const delta = deepObjectComparaison (a, b)
+
+        expect (delta).toStrictEqual ({
+            input: 'Jane Do',
+            p1: {
+                john: 20
+            }
+        })
+    })
 })
