@@ -31,4 +31,5 @@ const dataTableFactory = (getData, wrapper, { requestAfter = 250 } = {}, errorHa
     })
 }
 
+window.Datatable = dataTableFactory
 export default dataTableFactory

@@ -1,9 +1,12 @@
 const path = require ('path')
 
 module.exports = {
-    entry: './src/index.js',
+    entry: {
+        index: './src/index.js',
+        'data-table': './src/data-table-factory.js'
+    },
     output: {
-        filename: 'main.js',
+        filename: '[name].js',
         path: path.resolve (__dirname, 'dist')
     },
     module: {
