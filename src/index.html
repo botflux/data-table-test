@@ -39,17 +39,15 @@
 </head>
 <body>
     <div data-table>
-        <input type="text" data-table-field-input="name">
+        <input type="text" data-table-field-input="search">
         <table>
             <thead>
                 <tr>
-                    <td data-table-field="name">
+                    <td data-table-field-header="nom">
                         Commune
-                        <span data-table-field-order="name" data-table-order-direction></span>
                     </td>
-                    <td data-table-field="county">
+                    <td data-table-field-header="departement">
                         Département
-                        <span data-table-field-order="county" data-table-order-direction></span>
                     </td>
                 </tr>
             </thead>
@@ -57,7 +55,7 @@
         </table>
         <div data-table-empty-body>Aucune données trouvée</div>
 
-        <div data-table-paginator></div>
+        <div data-table-pagination-container></div>
 
         <template data-table-row-template>
             <tr>

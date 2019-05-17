@@ -1,9 +1,16 @@
-import deepObjectComparaison from './helper/deep-object-comparaison'
+import { diff } from 'deep-object-diff'
 
 const viewModelFactory = ({ eventTarget, getData, errorHandler, requestAfter = 750 }) => {
     
     let timeoutId
-    
+
+    /**
+     * Creates a proxy
+     * 
+     * @param {{}} baseState State returned by the event
+     * @param {{}} state State used by proxy
+     * @param {String} eventName Event name
+     */
     const makeProxy = (baseState, state, eventName) => {
         return new Proxy (state, {
             set (obj, prop, value) {
@@ -13,10 +20,9 @@ const viewModelFactory = ({ eventTarget, getData, errorHandler, requestAfter = 7
                 obj[prop] = value
                 const ns = JSON.parse (JSON.stringify (baseState))
                 // console.log('deep', deepObjectComparaison (os, ns))
-                const delta = deepObjectComparaison (os, ns)
-                // console.log('new state in proxy handler', ns)
-                // console.log('old state in proxy handler', os)
-                // console.log('delta in proxy handler', delta)
+                const delta = diff (os, ns)
+                // console.log(delta)
+
                 eventTarget.dispatchEvent (new CustomEvent (eventName, {
                     detail: {
                         oldState: os,
@@ -30,6 +36,7 @@ const viewModelFactory = ({ eventTarget, getData, errorHandler, requestAfter = 7
         })
     }
 
+    
     const state = {
         page: 0,
         pageCount: 0,
@@ -41,38 +48,40 @@ const viewModelFactory = ({ eventTarget, getData, errorHandler, requestAfter = 7
 
     state.inputs = makeProxy (state, {}, 'viewmodel')
     state.orders = makeProxy (state, {}, 'viewmodel')
-    const p = makeProxy (state, state, 'viewmodel')
+    const proxy = makeProxy (state, state, 'viewmodel')
 
-    eventTarget.addEventListener ('view:input', ({ detail }) => {
-        // console.log('input dispatched',p)
-        p.inputs[detail.name] = detail.value
+    eventTarget.addEventListener('view:input', e => {
+        // console.log('hello')
+        proxy.inputs[e.detail.name] = e.detail.value
     })
 
     eventTarget.addEventListener ('view:order', ({ detail }) => {
-        let current = p.orders[detail.name] || 0
+        let current = proxy.orders[detail] || 0
 
-        Object.keys (p.orders)
-            .forEach (k => {
-                p.orders[k] = 0
-            })
-        
-        if (++current > 1) {
+        current += 1
+
+        if (current > 1) {
             current = -1
         }
 
-        p.orders[detail.name] = current
+        // Object.keys(proxy.orders)
+        //     .forEach (key => proxy.orders[key] = 0)
+
+        proxy.orders[detail] = current
     })
 
     eventTarget.addEventListener ('view:page', ({ detail }) => {
-        p.page = detail
+        proxy.page = detail
     })
 
     eventTarget.addEventListener ('viewmodel', ({ detail }) => {
         if ('inputs' in detail.delta) {
-            state.page = 0
+            proxy.page = 0
         }
-
+        // console.log('bla', detail)
         if ('inputs' in detail.delta || 'orders' in detail.delta || 'page' in detail.delta) {
+            // console.log('input changed')
+            
             if (!!timeoutId) {
                 clearTimeout (timeoutId)
             }
@@ -80,19 +89,111 @@ const viewModelFactory = ({ eventTarget, getData, errorHandler, requestAfter = 7
             timeoutId = setTimeout (() => {
                 getData (detail.newState)
                     .then (({ data, pageCount }) => {
-                        // console.log(data, pageCount)
-                        p.data = data
-                        p.pageCount = pageCount
+                        proxy.data = data
+                        proxy.pageCount = pageCount
                     })
             }, requestAfter)
         }
+
     })
 
-    getData (state)
+    getData (proxy)
         .then (({ data, pageCount }) => {
-            p.data = data
-            p.pageCount = pageCount
+            proxy.page = 0
+            proxy.data = data
+            proxy.pageCount = pageCount
         })
+    // let timeoutId
+    
+    // const makeProxy = (baseState, state, eventName) => {
+    //     return new Proxy (state, {
+    //         set (obj, prop, value) {
+    //             if (obj[prop] === value) return true
+
+    //             const os = JSON.parse (JSON.stringify (baseState))
+    //             obj[prop] = value
+    //             const ns = JSON.parse (JSON.stringify (baseState))
+    //             // console.log('deep', deepObjectComparaison (os, ns))
+    //             const delta = deepObjectComparaison (os, ns)
+    //             // console.log('new state in proxy handler', ns)
+    //             // console.log('old state in proxy handler', os)
+    //             // console.log('delta in proxy handler', delta)
+    //             eventTarget.dispatchEvent (new CustomEvent (eventName, {
+    //                 detail: {
+    //                     oldState: os,
+    //                     newState: ns,
+    //                     delta
+    //                 }
+    //             }))
+
+    //             return true
+    //         }
+    //     })
+    // }
+
+    // const state = {
+    //     page: 0,
+    //     pageCount: 0,
+    //     data: [],
+
+    //     inputs: null,
+    //     orders: null
+    // }
+
+    // state.inputs = makeProxy (state, {}, 'viewmodel')
+    // state.orders = makeProxy (state, {}, 'viewmodel')
+    // const p = makeProxy (state, state, 'viewmodel')
+
+    // eventTarget.addEventListener ('view:input', ({ detail }) => {
+    //     // console.log('input dispatched',p)
+    //     p.inputs[detail.name] = detail.value
+    // })
+
+    // eventTarget.addEventListener ('view:order', ({ detail }) => {
+    //     let current = p.orders[detail.name] || 0
+
+    //     Object.keys (p.orders)
+    //         .forEach (k => {
+    //             p.orders[k] = 0
+    //         })
+        
+    //     if (++current > 1) {
+    //         current = -1
+    //     }
+
+    //     p.orders[detail.name] = current
+    // })
+
+    // eventTarget.addEventListener ('view:page', ({ detail }) => {
+    //     p.page = detail
+    // })
+
+    // eventTarget.addEventListener ('viewmodel', ({ detail }) => {
+    //     if ('inputs' in detail.delta) {
+    //         state.page = 0
+    //     }
+
+    //     if ('inputs' in detail.delta || 'orders' in detail.delta || 'page' in detail.delta) {
+    //         if (!!timeoutId) {
+    //             clearTimeout (timeoutId)
+    //         }
+            
+    //         timeoutId = setTimeout (() => {
+    //             getData (detail.newState)
+    //                 .then (({ data, pageCount }) => {
+    //                     // console.log(data, pageCount)
+    //                     p.data = data
+    //                     p.pageCount = pageCount
+    //                 })
+    //         }, requestAfter)
+    //     }
+    // })
+
+    // getData (state)
+    //     .then (({ data, pageCount }) => {
+    //         p.data = data
+    //         p.pageCount = pageCount
+    //     })
 
     // const state = new Proxy ({}, {
     //     set (obj, prop, value) {
