@@ -10,6 +10,7 @@ const viewFactory = ({ eventTarget, wrapper, errorHandler, config = {} }) => {
         /** Inputs attributes */
         inputAttribute = 'data-table-field-input',
         headerAttribute = 'data-table-field-header',
+        headerDirectionAttribute = 'data-table-direction-header',
 
         /** Containers attributes */
         bodyAttribute = 'data-table-body',
@@ -119,7 +120,14 @@ const viewFactory = ({ eventTarget, wrapper, errorHandler, config = {} }) => {
     }
 
     eventTarget.addEventListener ('viewmodel', ({ detail }) => {
-
+        console.log(detail)
+        if ('orders' in detail.delta) {
+            Object.entries (detail.delta.orders).forEach (([k, v]) => {
+                const header = document.querySelector(`[${headerAttribute}="${k}"]`)
+                header.setAttribute (headerDirectionAttribute, v)
+                console.log(header)
+            })
+        }
 
         if ('data' in detail.delta) {
             console.log('viewmodel data')
