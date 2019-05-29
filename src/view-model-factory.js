@@ -89,6 +89,7 @@ const viewModelFactory = ({ eventTarget, getData, errorHandler, requestAfter = 7
             timeoutId = setTimeout (() => {
                 getData (detail.newState)
                     .then (({ data, pageCount }) => {
+                        console.log(data)
                         proxy.data = data
                         proxy.pageCount = pageCount
                     })

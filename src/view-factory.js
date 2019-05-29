@@ -120,17 +120,17 @@ const viewFactory = ({ eventTarget, wrapper, errorHandler, config = {} }) => {
     }
 
     eventTarget.addEventListener ('viewmodel', ({ detail }) => {
-        console.log(detail)
+        // console.log(detail)
         if ('orders' in detail.delta) {
             Object.entries (detail.delta.orders).forEach (([k, v]) => {
                 const header = document.querySelector(`[${headerAttribute}="${k}"]`)
                 header.setAttribute (headerDirectionAttribute, v)
-                console.log(header)
+                // console.log(header)
             })
         }
 
         if ('data' in detail.delta) {
-            console.log('data has changed', detail.newState.data)
+            // console.log('data has changed', detail.newState.data)
 
             const isEmpty = detail.newState.data.length === 0
             
