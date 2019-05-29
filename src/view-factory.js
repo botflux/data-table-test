@@ -130,11 +130,12 @@ const viewFactory = ({ eventTarget, wrapper, errorHandler, config = {} }) => {
         }
 
         if ('data' in detail.delta) {
-            console.log('viewmodel data')
-            if (detail.newState.data.length === 0) {
-                bodyElement.setAttribute (bodyAttribute, 'empty')
-                emptyBodyElement.setAttribute (emptyBodyAttribute, 'empty')
-            }
+            console.log('data has changed', detail.newState.data)
+
+            const isEmpty = detail.newState.data.length === 0
+            
+            bodyElement.setAttribute (bodyAttribute, isEmpty ? 'empty': null)
+            emptyBodyElement.setAttribute (emptyBodyAttribute, isEmpty ? 'empty': null)
 
             bodyElement.innerHTML = ''
 
