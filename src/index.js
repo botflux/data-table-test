@@ -1,21 +1,5 @@
 import dataTableFactory from './data-table-factory'
 
-
-const adapter = rows => {
-    return rows.map (row => {
-        row.name = row.nom
-        row.county = row.departement
-
-        return row
-    })
-}
-const fieldNameAdapter = fieldName => {
-    switch (fieldName) {
-        case 'name': return 'nom'
-        case 'county': return 'departement'
-    }
-}
-
 const getData = (newState) => {
     
     const fields = [{
@@ -44,12 +28,11 @@ const getData = (newState) => {
         .reduce ((p, [k, v]) => {
             return `${p}${p.length > 0 ? '&' : ''}order[${k}]=${v === 1 ? 'ASC' : 'DESC' }`
         }, '')
-        // .reduce ((p, [k, v]) => encodeURI(`${p}&${k}=${v}`), '')
 
     const pageString = `page=${(newState.page + 1)}`
 
     const url = `https://api.webcimetiere.net/api/communes?${encodeURI(pageString)}&${encodeURI(searchFields)}&${encodeURI(ordersString)}`
-        console.log(url)
+
     return fetch(url)
         .then (response => response.json())
         .then (data => {
@@ -60,7 +43,15 @@ const getData = (newState) => {
         })
 }
 
-dataTableFactory (getData, document.querySelector('[data-table]'))
+dataTableFactory (
+    getData, 
+    document.querySelector('[data-table]'), 
+    {},
+    row => ({ 
+        ...row, 
+        hello: 'world' 
+    })
+)
 
 // import viewFactory from './view-factory'
 // import viewModelFactory from './view-model-factory'
