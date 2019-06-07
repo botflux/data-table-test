@@ -5,7 +5,7 @@ import { twig } from 'twig'
  * 
  * @param {{}} param0 
  */
-const viewFactory = ({ eventTarget, wrapper, errorHandler, config = {} }) => {
+const viewFactory = ({ eventTarget, wrapper, errorHandler, config = {}, inject }) => {
 
     const {
         /** Inputs attributes */
@@ -129,7 +129,9 @@ const viewFactory = ({ eventTarget, wrapper, errorHandler, config = {} }) => {
 
             bodyElement.innerHTML = ''
 
-            detail.newState.data.forEach (row => makeRowElement (row))
+            detail.newState.data
+                .map (row => inject (row))
+                .forEach (row => makeRowElement (row))
         }
 
         if ('page' in detail.delta || 'pageCount' in detail.delta) {

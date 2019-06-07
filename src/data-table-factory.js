@@ -7,9 +7,10 @@ import viewFactory from './view-factory'
  * @param {Function} getData 
  * @param {HTMLElement} wrapper 
  * @param {{}} param2 
+ * @param {Function} inject
  * @param {EventTarget} errorHandler 
  */
-const dataTableFactory = (getData, wrapper, { requestAfter = 250 } = {}, errorHandler) => {
+const dataTableFactory = (getData, wrapper, { requestAfter = 250 } = {}, inject = row => row, errorHandler) => {
     const eventTarget = new EventTarget ()
 
     if (!errorHandler) {
@@ -23,11 +24,11 @@ const dataTableFactory = (getData, wrapper, { requestAfter = 250 } = {}, errorHa
         errorHandler,
         requestAfter
     })
-
     viewFactory ({
         eventTarget,
         wrapper,
-        errorHandler
+        errorHandler,
+        inject
     })
 }
 
