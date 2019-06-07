@@ -36,6 +36,7 @@
     "babel-jest": "^24.8.0",
     "deep-object-diff": "^1.1.0",
     "fromentries": "^1.1.0",
-    "lodash": "^4.17.11"
+    "lodash": "^4.17.11",
+    "twig": "^1.13.3"
   }
 }
