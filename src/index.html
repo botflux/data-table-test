@@ -60,7 +60,12 @@
         <template data-table-row-template>
             <tr>
                 <td><a href="/{{ departement }}/{{ nom }}">{{ nom }}</a></td>
-                <td>{{ departement }}</td>
+                <td>
+                    {{ departement }}
+                    {% for i in arr %}
+                        {{ i }}
+                    {% endfor %}
+                </td>
             </tr>
         </template>
 

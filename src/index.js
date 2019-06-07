@@ -54,7 +54,7 @@ const getData = (newState) => {
         .then (response => response.json())
         .then (data => {
             return {
-                data: data['hydra:member'],
+                data: data['hydra:member'].map(row => ({...row, arr: [...Array(10).keys()] })),
                 pageCount: data['hydra:totalItems'] > 0 ? (Math.ceil(data['hydra:totalItems'] / 30)) : 1
             }
         })

@@ -1,4 +1,5 @@
 import attributeToAttributeSelector from './helper/attribute-to-attribute-selector'
+import { twig } from 'twig'
 
 /**
  * 
@@ -99,24 +100,13 @@ const viewFactory = ({ eventTarget, wrapper, errorHandler, config = {} }) => {
     }
 
     const makeRowElement = row => {
-        const template = rowTemplate.cloneNode (true)
-                    let templateString = template.innerHTML
-                    Object.keys (row)
-                        .forEach (k => {
-                            const r = new RegExp (`{{\\s(${k})\\s}}`, 'gm')
-                            templateString = templateString.replace(r, row[k])
-                            // const field = template.querySelector (`[${rowElementFieldAttribute}="${k}"]`)
-                            
-                            // if (!field) return
-        
-        
-        
-                            // field.innerHTML = row[k]
-                        })
-        
-                    template.innerHTML = templateString
-        
-                    bodyElement.appendChild (template.content)
+        const htmlTemplate = rowTemplate.cloneNode (true)
+        const templateString = htmlTemplate.innerHTML
+        const twigTemplate = twig({
+            data: templateString
+        })
+        htmlTemplate.innerHTML = twigTemplate.render(row)
+        bodyElement.appendChild (htmlTemplate.content)
     }
 
     eventTarget.addEventListener ('viewmodel', ({ detail }) => {
